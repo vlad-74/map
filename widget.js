@@ -85,7 +85,7 @@ function init () {
     function modalWindow (obj, startArr) {
         Object.keys(startArr).map(
             key => {
-                if (key === obj) {
+                if (key + '' === obj) {
                     var str = startArr[key].properties.balloonContentBody;
                     var res = str.split('</p>');
                     for (let i = 0; i < res.length; i++) {
