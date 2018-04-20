@@ -3,20 +3,31 @@ tag_css.type = 'text/css';
 tag_css.innerHTML = `
 p {
     text-align: center;
-    font-size: larger;
+    font-family: Verdana, Arial, Helvetica, sans-serif; 
+    font-size: 16pt; 
 }
 
 label {
-    width: 200px;
+    width: 100px;
+    font-family: Verdana, Arial, Helvetica, sans-serif; 
+    font-size: 12pt; 
 }
 
 input {
-    width: 350px;
+    width: 450px;
+    border-radius: 10px;
+    font-family: Verdana, Arial, Helvetica, sans-serif; 
+    font-size: 11pt; 
 }
 
+textarea {
+    width: 448px;
+    border-radius: 10px;
+}
 
 html, body, #map { width: 100%; height: 100%; padding: 0; margin: 0;} 
-.form-group {display: flex; width: 100%; padding: 10px 0;} 
+.form-group div { display: flex; width: 100%; padding: 5px 0;} 
+
 `
 document.getElementsByTagName('head')[0].appendChild(tag_css);
 
@@ -62,6 +73,7 @@ function init () {
     $.ajax({
         url: './data.json'
     }).done(function(data) {
+        console.log('data', data);
         objectManager.add(data);
     });
 
@@ -83,16 +95,32 @@ function init () {
     }
 
     function modalWindow (obj, startArr) {
+        var linkValue;
+        var nameValue;
+        var adresValue;
+        var descValue;
+        var telValue;
         Object.keys(startArr).map(
             key => {
-                if (key + '' === obj) {
+                if (key === obj + '') {
+                    linkValue = startArr[key].properties.balloonContentHeader
                     var str = startArr[key].properties.balloonContentBody;
-                    var res = str.split('</p>');
+                    var res = str.split('</div>');
                     for (let i = 0; i < res.length; i++) {
-                        if (i === 0) {
-                            console.log(res[i].slice(41, -2));
-                        }
-                        
+                        switch (i) {
+                            case 0:
+                                nameValue = res[i] + '</div>';
+                                break;
+                            case 1:
+                                adresValue = res[i] + '</div>';
+                                break;
+                            case 2:
+                                descValue = res[i] + '</div>';
+                                break;
+                            case 3:
+                                telValue = res[i] + '</div>';
+                                break;
+                        }   
                     }
                 }
             }
@@ -131,26 +159,27 @@ function init () {
         m.className = 'modal';
         m.innerHTML = `
         
-        <p><a target='_blank' href='https://www.simbirsoft.com/'>SimbirSoft</a></p>
+        <p> ${linkValue || ''} </p>
 
         <div class='form-group'>
-            <label for='text1'>Название организации</label>
-            <input type='text' class='form-control' id='text1' placeholder='Введите название'>
+            ${nameValue || ''} 
         </div>
         <div class='form-group'>
-            <label for='text2'>Адрес</label>
-            <input type='text' class='form-control' id='text2' placeholder='Введите адрес'>
+            ${adresValue || ''} 
         </div>
         <div class='form-group'>
-            <label for='text3'>Телефон</label>
-            <input type='text' class='form-control' id='text3' placeholder='Введите номер телефона'>
+        ${descValue || ''} 
+        </div>
+        <div class='form-group'>
+            ${telValue || ''} 
         </div>
         `
+
         m.style.position = 'absolute';
         m.style.top = '100px';
         m.style.left = '35%';
         m.style.width = '600px';
-        m.style.height = '250px';
+        m.style.height = '350px';
         m.style.padding = '20px';
         m.style.zIndex = '300';
         m.style.borderRadius = '2%';
