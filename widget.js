@@ -68,6 +68,7 @@ function init () {
     // обратимся к дочерним коллекциям ObjectManager.
     objectManager.objects.options.set('preset', 'islands#greenDotIcon');
     objectManager.clusters.options.set('preset', 'islands#greenClusterIcons');
+
     myMap.geoObjects.add(objectManager);
 
     $.ajax({
@@ -84,7 +85,15 @@ function init () {
     
     function onClusterEvent (e) {
         var objectId = e.get('objectId');
-        modalWindow(objectId);
+        if (e.get('type') == 'mouseenter') {
+            objectManager.clusters.setClusterOptions(objectId, {
+                preset: 'islands#yellowClusterIcons'
+            });
+        } else {
+            objectManager.clusters.setClusterOptions(objectId, {
+                preset: 'islands#blueClusterIcons'
+            });
+        }
     }
 
     function closeModal () {
