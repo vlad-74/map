@@ -1,35 +1,24 @@
-﻿var tag_css = document.createElement('style');
-tag_css.type = 'text/css';
-tag_css.innerHTML = `
-p {
-    text-align: center;
-    font-family: Verdana, Arial, Helvetica, sans-serif; 
-    font-size: 16pt; 
-}
-
-label {
-    width: 100px;
-    font-family: Verdana, Arial, Helvetica, sans-serif; 
-    font-size: 12pt; 
-}
-
-input {
-    width: 450px;
-    border-radius: 10px;
-    font-family: Verdana, Arial, Helvetica, sans-serif; 
-    font-size: 11pt; 
-}
-
-textarea {
-    width: 448px;
-    border-radius: 10px;
-}
-
-html, body, #map { width: 100%; height: 100%; padding: 0; margin: 0;} 
-.form-group div { display: flex; width: 100%; padding: 5px 0;} 
-
+﻿var cssStyle = document.createElement('style');
+cssStyle.type = 'text/css';
+cssStyle.innerHTML = `
+html, body, #map { width: 100%; height: 100%; padding: 0; margin: 0; font-family: Verdana, Arial, Helvetica, sans-serif;} 
+p { text-align: center; font-size: 16pt; }
+label { width: 100px; font-size: 12pt; }
+input { width: 450px; border-radius: 7px; font-size: 11pt; }
+textarea { width: 448px; border-radius: 10px;}
+.form-group div { display: flex; width: 100%; padding: 5px 0;}
+.flex { display: flex;  justify-content: space-between; margin: 25px 10px;}
+#divModal { position: absolute; top: 0; width: 100%; height: 100%; z-index: 100; background-color: yellow; opacity: 0.5 }
+#spanModal { line-height: 30px; cursor: pointer; color: yellow; position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; z-index: 110; background-color: blue; text-align: center; }
+#formModal { position: absolute; top: 100px; left: 35%; top: 25%; width: 600px; height: 400px; padding: 20px; z-index: 300; border-radius: 2%; background-color: LightBlue; }
+#exit { background: #3498db; border-radius: 10px; color: #ffffff; font-size: 12pt; padding: 5px 10px; text-decoration: none; cursor: pointer;}
+#exit:hover { background: #3cb0fd; text-decoration: none; cursor: pointer; }
+#save {background: #d9345d; border-radius: 10px; color: #ffffff; font-size: 12pt;  padding: 5px 10px text-decoration: none; cursor: pointer; }
+#save:hover { background: #fc3c73; text-decoration: none; cursor: pointer; }
+#save[disabled] { cursor: default; background-color: grey; }
 `
-document.getElementsByTagName('head')[0].appendChild(tag_css);
+
+document.getElementsByTagName('head')[0].appendChild(cssStyle);
 
 var s2 = document.createElement('script');
 s2.type = 'text/javascript';
@@ -59,10 +48,13 @@ function init () {
             clusterize: true,
             // ObjectManager принимает те же опции, что и кластеризатор.
             gridSize: 32,
-            clusterDisableClickZoom: true,
+            clusterDisableClickZoom: false,
             geoObjectOpenBalloonOnClick: false,
             clusterOpenBalloonOnClick: false
         });
+
+    objectManager.objects.events.add(['click'], onObjectEvent);
+    objectManager.clusters.events.add(['click'], onClusterEvent);
 
     // Чтобы задать опции одиночным объектам и кластерам,
     // обратимся к дочерним коллекциям ObjectManager.
@@ -74,7 +66,6 @@ function init () {
     $.ajax({
         url: './data.json'
     }).done(function(data) {
-        console.log('data', data);
         objectManager.add(data);
     });
 
@@ -103,6 +94,10 @@ function init () {
         }
     }
 
+    function unblock () {
+        document.getElementById('save').disabled = false;
+    }
+
     function modalWindow (obj, startArr) {
         var linkValue;
         var nameValue;
@@ -112,7 +107,8 @@ function init () {
         Object.keys(startArr).map(
             key => {
                 if (key === obj + '') {
-                    linkValue = startArr[key].properties.balloonContentHeader
+                    linkValue = startArr[key].properties.balloonContentHeader;
+                    linkValue = linkValue.length < 90 ? 'Информация об организации' : linkValue;
                     var str = startArr[key].properties.balloonContentBody;
                     var res = str.split('</div>');
                     for (let i = 0; i < res.length; i++) {
@@ -135,41 +131,23 @@ function init () {
             }
           );
 
+        var dmw = document.createElement('div');
+        dmw.id = 'divModal';
+        dmw.className = 'modal';
+        document.getElementById('map').appendChild(dmw);
+
         var sp = document.createElement('span');
+        sp.id = 'spanModal';
         sp.className = 'modal';
         sp.innerHTML = 'X';
-        sp.style.textAlign = 'center';
-        sp.style.lineHeight = '30px';
-        sp.style.cursor = 'pointer';
-        sp.style.color = 'yellow';
-        sp.style.position = 'absolute';
-        sp.style.top = '10px';
-        sp.style.right = '10px';
-        sp.style.width = '30px';
-        sp.style.height = '30px';
-        sp.style.borderRadius = '50%';
-        sp.style.zIndex = '110';
-        sp.style.backgroundColor = 'blue';
         sp.addEventListener('click', closeModal);
         document.getElementById('map').appendChild(sp);
 
-        var dmw = document.createElement('div');
-        dmw.className = 'modal';
-        dmw.style.position = 'absolute';
-        dmw.style.top = '0';
-        dmw.style.width = '100%';
-        dmw.style.height = '100%';
-        dmw.style.zIndex = '100';
-        dmw.style.backgroundColor = 'yellow';
-        dmw.style.opacity = '0.5';
-        document.getElementById('map').appendChild(dmw);
-
         var m = document.createElement('div');
+        m.id = 'formModal';
         m.className = 'modal';
         m.innerHTML = `
-        
         <p> ${linkValue || ''} </p>
-
         <div class='form-group'>
             ${nameValue || ''} 
         </div>
@@ -182,23 +160,25 @@ function init () {
         <div class='form-group'>
             ${telValue || ''} 
         </div>
+        <div class='flex'>
+            <button id='exit'> Выйти </button> 
+            <button disabled id='save'> Сохранить </button>
+        </div>
         `
-
-        m.style.position = 'absolute';
-        m.style.top = '100px';
-        m.style.left = '35%';
-        m.style.width = '600px';
-        m.style.height = '350px';
-        m.style.padding = '20px';
-        m.style.zIndex = '300';
-        m.style.borderRadius = '2%';
-        m.style.backgroundColor = 'LightBlue';
         document.getElementById('map').appendChild(m);
 
-        console.log('onObjectEvent ', obj);
+        document.getElementById('exit').addEventListener('click', closeModal);
+        document.getElementById('save').addEventListener('click', closeModal);
+
+        let textar = document.getElementsByTagName('textarea'),j=0;
+        for (let j = 0; j < textar.length; j++) { 
+            textar[j].addEventListener('keydown', unblock);
+        }
+
+        let inputs = document.getElementsByTagName('input'),i=0;
+        for (let i = 0; i < inputs.length; i++) { 
+            inputs[i].addEventListener('keydown', unblock);
+        }
 
     }
-
-    objectManager.objects.events.add(['click'], onObjectEvent);
-    objectManager.clusters.events.add(['click'], onClusterEvent);
 }
